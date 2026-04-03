@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skin'Epil — Institut d'épilation & soins</title>
+    <meta name="description" content="Skin'Epil, votre institut d'épilation et de soins à [ville]. Épilation, soins du visage, massages et soins intimes dans un cadre bienveillant.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Montserrat:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="nav" id="nav">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo">Skin'Epil</a>
+            <button class="nav-toggle" id="navToggle" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html" class="active">Accueil</a></li>
+                <li><a href="prestations.html">Nos Prestations</a></li>
+                <li><a href="reservation.html">Réserver</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <p class="hero-subtitle">Institut d'épilation & soins</p>
+            <h1 class="hero-title">Skin'Epil</h1>
+            <div class="hero-line"></div>
+            <p class="hero-text">Une parenthèse de douceur dédiée à votre bien-être.<br>Épilation, soins du visage, massages & soins intimes.</p>
+            <a href="reservation.html" class="btn btn-primary">Réserver en ligne</a>
+        </div>
+        <div class="hero-scroll">
+            <span>Découvrir</span>
+            <div class="hero-scroll-line"></div>
+        </div>
+    </header>
+
+    <!-- About -->
+    <section class="section section-about" id="about">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-image">
+                    <div class="about-image-placeholder">
+                        <span>Skin'Epil</span>
+                    </div>
+                </div>
+                <div class="about-content">
+                    <p class="section-label">Bienvenue</p>
+                    <h2 class="section-title">Un espace pensé pour vous</h2>
+                    <div class="section-divider"></div>
+                    <p class="about-text">
+                        Chez Skin'Epil, nous croyons que chaque personne mérite un moment de détente
+                        dans un cadre bienveillant et chaleureux. Notre institut vous accueille pour des
+                        prestations d'épilation réalisées avec patience et délicatesse, des soins du visage
+                        personnalisés et des massages relaxants.
+                    </p>
+                    <p class="about-text">
+                        Notre approche ? L'écoute, le respect et le professionnalisme,
+                        pour que chaque visite soit une expérience unique.
+                    </p>
+                    <a href="prestations.html" class="btn btn-outline">Découvrir nos prestations</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Preview -->
+    <section class="section section-services">
+        <div class="container">
+            <div class="text-center">
+                <p class="section-label">Nos univers</p>
+                <h2 class="section-title">Ce que nous proposons</h2>
+                <div class="section-divider center"></div>
+            </div>
+            <div class="services-grid">
+                <a href="prestations.html#epilation" class="service-card">
+                    <div class="service-card-icon">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M24 4C20 12 8 16 8 28C8 36.837 15.163 44 24 44C32.837 44 40 36.837 40 28C40 16 28 12 24 4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="service-card-title">Épilation</h3>
+                    <p class="service-card-text">Visage, corps, maillots — une épilation douce et précise adaptée à chaque zone.</p>
+                    <span class="service-card-link">Voir les tarifs →</span>
+                </a>
+                <a href="prestations.html#soins-visage" class="service-card">
+                    <div class="service-card-icon">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="24" cy="20" r="12" stroke="currentColor" stroke-width="1.5"/>
+                            <path d="M16 36C16 32 19.582 28 24 28C28.418 28 32 32 32 36" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            <circle cx="20" cy="18" r="1.5" fill="currentColor"/>
+                            <circle cx="28" cy="18" r="1.5" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <h3 class="service-card-title">Soins du visage</h3>
+                    <p class="service-card-text">Nettoyage express, soin traitant ou ciblé — révélez l'éclat de votre peau.</p>
+                    <span class="service-card-link">Voir les tarifs →</span>
+                </a>
+                <a href="prestations.html#massages" class="service-card">
+                    <div class="service-card-icon">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8 28C8 28 14 20 24 20C34 20 40 28 40 28" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            <path d="M12 34C12 34 16 28 24 28C32 28 36 34 36 34" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            <path d="M24 8V16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            <path d="M18 10L20 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            <path d="M30 10L28 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="service-card-title">Massages</h3>
+                    <p class="service-card-text">Massage relaxant corps ou cuir chevelu — offrez-vous un moment de détente absolue.</p>
+                    <span class="service-card-link">Voir les tarifs →</span>
+                </a>
+                <a href="prestations.html#soins-intimes" class="service-card">
+                    <div class="service-card-icon">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M24 42C24 42 6 30 6 18C6 12 10 6 16 6C20 6 23 9 24 12C25 9 28 6 32 6C38 6 42 12 42 18C42 30 24 42 24 42Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="service-card-title">Soins intimes</h3>
+                    <p class="service-card-text">Vajacial & Booty Facial — des soins dédiés pour une peau douce et saine.</p>
+                    <span class="service-card-link">Voir les tarifs →</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Highlight Banner -->
+    <section class="section section-highlight">
+        <div class="highlight-overlay"></div>
+        <div class="container">
+            <div class="highlight-content text-center">
+                <p class="section-label light">Offre découverte</p>
+                <h2 class="highlight-title">Votre première expérience maillot intégral</h2>
+                <div class="section-divider center light"></div>
+                <p class="highlight-text">
+                    Vous hésitez à franchir le cap ? Chez Skin'Epil, profitez d'une épilation
+                    réalisée avec patience et délicatesse, de conseils personnalisés et d'un
+                    massage du cuir chevelu de 20 minutes offert.
+                </p>
+                <p class="highlight-price">40€</p>
+                <a href="reservation.html" class="btn btn-white">Réserver cette offre</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Forfait Mariée -->
+    <section class="section section-bride">
+        <div class="container">
+            <div class="bride-grid">
+                <div class="bride-content">
+                    <p class="section-label">Jour J</p>
+                    <h2 class="section-title">Forfait Mariée</h2>
+                    <div class="section-divider"></div>
+                    <p class="bride-text">
+                        Prépare ta peau pour un rendu impeccable le jour J.
+                        Un forfait complet pensé pour les futures mariées :
+                    </p>
+                    <ul class="bride-list">
+                        <li>Épilation corps complet</li>
+                        <li>Vajacial complet : vapeur, exfoliation, extraction douce, masque</li>
+                        <li>Booty Facial : exfoliation + masque</li>
+                        <li>Soin visage "Glow" : nettoyage, massage liftant, masque hydratant</li>
+                    </ul>
+                    <p class="bride-ideal">Idéal 3 à 7 jours avant le mariage</p>
+                    <div class="bride-price">
+                        <span class="bride-price-amount">170€</span>
+                        <a href="reservation.html" class="btn btn-primary">Réserver ce forfait</a>
+                    </div>
+                </div>
+                <div class="bride-visual">
+                    <div class="bride-visual-inner">
+                        <span class="bride-visual-text">Bride to be</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="section section-cta">
+        <div class="container text-center">
+            <p class="section-label">Prête ?</p>
+            <h2 class="section-title">Réservez votre créneau</h2>
+            <div class="section-divider center"></div>
+            <p class="cta-text">Choisissez votre prestation et réservez en quelques clics.</p>
+            <a href="reservation.html" class="btn btn-primary">Réserver en ligne</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer" id="contact">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <h3 class="footer-logo">Skin'Epil</h3>
+                    <p class="footer-tagline">Institut d'épilation & soins</p>
+                </div>
+                <div class="footer-col">
+                    <h4 class="footer-heading">Navigation</h4>
+                    <ul class="footer-nav">
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="prestations.html">Nos Prestations</a></li>
+                        <li><a href="reservation.html">Réserver</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4 class="footer-heading">Contact</h4>
+                    <ul class="footer-nav">
+                        <li>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            <span>124 rue de l'Épidème, 59200 Tourcoing</span>
+                        </li>
+                        <li>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+                            <span>Uniquement sur rendez-vous</span>
+                        </li>
+                        <li>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                            <a href="tel:+33623167266"><span>06 23 16 72 66</span></a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4 class="footer-heading">Horaires</h4>
+                    <ul class="footer-nav">
+                        <li>Sur rendez-vous uniquement</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Skin'Epil — Tous droits réservés · <a href="admin.html" style="color: rgba(255,255,255,0.2);">Admin</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

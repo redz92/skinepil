@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Réserver — Skin'Epil</title>
+    <meta name="description" content="Réservez votre créneau en ligne chez Skin'Epil. Choisissez votre prestation, votre date et votre heure.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Montserrat:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="nav scrolled" id="nav">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo">Skin'Epil</a>
+            <button class="nav-toggle" id="navToggle" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html">Accueil</a></li>
+                <li><a href="prestations.html">Nos Prestations</a></li>
+                <li><a href="reservation.html" class="active">Réserver</a></li>
+                <li><a href="index.html#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <header class="page-header">
+        <div class="page-header-content">
+            <p class="section-label">Réservation</p>
+            <h1 class="section-title">Réserver en ligne</h1>
+            <div class="section-divider center light"></div>
+            <p class="page-header-text">Choisissez votre prestation, votre créneau et confirmez en quelques clics.</p>
+        </div>
+    </header>
+
+    <!-- Booking -->
+    <section class="section" style="background: var(--color-bg);">
+        <div class="container">
+            <div class="reservation-container">
+
+                <!-- Steps -->
+                <div class="booking-steps">
+                    <div class="booking-step active" data-step="1">
+                        <div class="step-number">1</div>
+                        <span class="step-label">Prestation</span>
+                    </div>
+                    <div class="booking-step" data-step="2">
+                        <div class="step-number">2</div>
+                        <span class="step-label">Date & Heure</span>
+                    </div>
+                    <div class="booking-step" data-step="3">
+                        <div class="step-number">3</div>
+                        <span class="step-label">Vos infos</span>
+                    </div>
+                    <div class="booking-step" data-step="4">
+                        <div class="step-number">4</div>
+                        <span class="step-label">Confirmation</span>
+                    </div>
+                </div>
+
+                <!-- Step 1: Service Selection (built dynamically from admin data) -->
+                <div class="booking-panel active" id="step1">
+                    <h2 class="booking-panel-title">Choisissez votre prestation</h2>
+                    <p class="booking-panel-desc">Sélectionnez le soin que vous souhaitez réserver.</p>
+
+                    <!-- Categories are injected here by booking.js -->
+
+                    <div class="booking-nav">
+                        <div></div>
+                        <button class="btn btn-primary" id="toStep2" disabled>Continuer</button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Date & Time -->
+                <div class="booking-panel" id="step2">
+                    <h2 class="booking-panel-title">Choisissez votre créneau</h2>
+                    <p class="booking-panel-desc">Sélectionnez une date puis un horaire disponible.</p>
+
+                    <div class="calendar-wrapper">
+                        <div class="calendar-header">
+                            <button class="calendar-nav-btn" id="calPrev">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                            </button>
+                            <span class="calendar-month" id="calMonth"></span>
+                            <button class="calendar-nav-btn" id="calNext">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                            </button>
+                        </div>
+                        <div class="calendar-grid">
+                            <div class="calendar-weekdays">
+                                <span class="calendar-weekday">Lun</span>
+                                <span class="calendar-weekday">Mar</span>
+                                <span class="calendar-weekday">Mer</span>
+                                <span class="calendar-weekday">Jeu</span>
+                                <span class="calendar-weekday">Ven</span>
+                                <span class="calendar-weekday">Sam</span>
+                                <span class="calendar-weekday">Dim</span>
+                            </div>
+                            <div class="calendar-days" id="calDays"></div>
+                        </div>
+                    </div>
+
+                    <div class="time-slots" id="timeSlots" style="display: none;">
+                        <h3 class="time-slots-title">Horaires disponibles</h3>
+                        <div class="time-slots-grid" id="timeSlotsGrid"></div>
+                    </div>
+
+                    <div class="booking-nav">
+                        <button class="btn btn-outline" id="backToStep1">Retour</button>
+                        <button class="btn btn-primary" id="toStep3" disabled>Continuer</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Client Info -->
+                <div class="booking-panel" id="step3">
+                    <h2 class="booking-panel-title">Vos informations</h2>
+                    <p class="booking-panel-desc">Ces informations nous permettent de confirmer votre réservation.</p>
+
+                    <form class="booking-form" id="bookingForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="firstName">Prénom *</label>
+                                <input type="text" class="form-input" id="firstName" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="lastName">Nom *</label>
+                                <input type="text" class="form-input" id="lastName" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="email">Email *</label>
+                                <input type="email" class="form-input" id="email" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="phone">Téléphone *</label>
+                                <input type="tel" class="form-input" id="phone" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="notes">Notes (optionnel)</label>
+                            <textarea class="form-textarea" id="notes" placeholder="Précisez ici toute information utile..."></textarea>
+                        </div>
+                    </form>
+
+                    <!-- Summary -->
+                    <div class="booking-summary" style="margin-top: 32px;">
+                        <h3 class="summary-title">Récapitulatif</h3>
+                        <div class="summary-row">
+                            <span class="summary-label">Prestation</span>
+                            <span class="summary-value" id="summaryService">—</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Date</span>
+                            <span class="summary-value" id="summaryDate">—</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Heure</span>
+                            <span class="summary-value" id="summaryTime">—</span>
+                        </div>
+                        <div class="summary-total">
+                            <span class="summary-total-label">Total</span>
+                            <span class="summary-total-price" id="summaryPrice">—</span>
+                        </div>
+                    </div>
+
+                    <div class="booking-nav">
+                        <button class="btn btn-outline" id="backToStep2">Retour</button>
+                        <button class="btn btn-primary" id="toStep4">Confirmer la réservation</button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Confirmation -->
+                <div class="booking-panel" id="step4">
+                    <div class="confirmation-box">
+                        <div class="confirmation-icon">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+                        </div>
+                        <h2 class="confirmation-title">Réservation confirmée</h2>
+                        <p class="confirmation-text">
+                            Merci ! Votre réservation a bien été enregistrée.
+                            Vous recevrez un email de confirmation à l'adresse indiquée.
+                        </p>
+                        <div class="booking-summary" style="margin-top: 32px; text-align: left;">
+                            <div class="summary-row">
+                                <span class="summary-label">Prestation</span>
+                                <span class="summary-value" id="confService">—</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label">Date</span>
+                                <span class="summary-value" id="confDate">—</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label">Heure</span>
+                                <span class="summary-value" id="confTime">—</span>
+                            </div>
+                            <div class="summary-total">
+                                <span class="summary-total-label">Total</span>
+                                <span class="summary-total-price" id="confPrice">—</span>
+                            </div>
+                        </div>
+                        <a href="index.html" class="btn btn-primary" style="margin-top: 32px;">Retour à l'accueil</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <h3 class="footer-logo">Skin'Epil</h3>
+                    <p class="footer-tagline">Institut d'épilation & soins</p>
+                </div>
+                <div class="footer-col">
+                    <h4 class="footer-heading">Navigation</h4>
+                    <ul class="footer-nav">
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="prestations.html">Nos Prestations</a></li>
+                        <li><a href="reservation.html">Réserver</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4 class="footer-heading">Contact</h4>
+                    <ul class="footer-nav">
+                        <li>124 rue de l'Épidème, 59200 Tourcoing</li>
+                        <li><a href="tel:+33623167266">06 23 16 72 66</a></li>
+                        <li>Uniquement sur rendez-vous</li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4 class="footer-heading">Horaires</h4>
+                    <ul class="footer-nav">
+                        <li>Sur rendez-vous uniquement</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Skin'Epil — Tous droits réservés · <a href="admin.html" style="color: rgba(255,255,255,0.2);">Admin</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/booking.js"></script>
+</body>
+</html>
