@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "Vercel Dev Server",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "-l", "3000", "--no-clipboard"],
+      "runtimeExecutable": "/usr/local/bin/node",
+      "runtimeArgs": ["server.js"],
       "port": 3000
     }
   ]

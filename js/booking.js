@@ -1,6 +1,6 @@
 /* ============================================
    SKIN'EPIL — Booking System
-   Reads services from API, posts reservations to API
+   Multi-service cart + calendar + API
    ============================================ */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,9 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- State ---
     let allServices = [];
-    let selectedService = null;
-    let selectedPrice = null;
-    let selectedDuration = null;
+    let cart = []; // { id, name, price, duration }
     let selectedDate = null;
     let selectedTime = null;
     let currentMonth = new Date().getMonth();
@@ -36,7 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const timeSlotsContainer = document.getElementById('timeSlots');
     const timeSlotsGrid = document.getElementById('timeSlotsGrid');
 
-    // --- Fallback services (used when API is unavailable) ---
+    // Computed cart values
+    function cartTotal() { return cart.reduce((s, i) => s + i.price, 0); }
+    function cartDuration() { return cart.reduce((s, i) => s + i.duration, 0); }
+    function cartNames() { return cart.map(i => i.name).join(' + '); }
+
+    // --- Fallback services ---
     const FALLBACK_SERVICES = [
         { category: "Épilation — Visage (hors sourcils)", items: [
             { id: "levre-sup", name: "Lèvre supérieure", price: 5, duration: 10 },
@@ -95,17 +98,13 @@ document.addEventListener('DOMContentLoaded', () => {
         ]},
     ];
 
-    // --- Load services from API (fallback to local data) ---
+    // --- Load services ---
     async function loadServices() {
         try {
             const res = await fetch(API.services);
             if (res.ok) {
                 const data = await res.json();
-                if (Array.isArray(data) && data.length > 0) {
-                    allServices = data;
-                } else {
-                    allServices = FALLBACK_SERVICES;
-                }
+                allServices = (Array.isArray(data) && data.length > 0) ? data : FALLBACK_SERVICES;
             } else {
                 allServices = FALLBACK_SERVICES;
             }
@@ -115,10 +114,12 @@ document.addEventListener('DOMContentLoaded', () => {
         buildServiceList();
     }
 
-    // --- Build service list dynamically ---
+    // --- Build service list with checkboxes ---
     function buildServiceList() {
         const existing = step1Container.querySelectorAll('.service-select-category');
         existing.forEach(el => el.remove());
+        const existingCart = step1Container.querySelector('.cart-summary');
+        if (existingCart) existingCart.remove();
 
         const bookingNav = step1Container.querySelector('.booking-nav');
 
@@ -128,9 +129,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let html = `<h3 class="service-select-title">${escHTML(cat.category)}</h3>`;
             cat.items.forEach(item => {
+                const inCart = cart.some(c => c.id === item.id);
                 html += `
-                    <label class="service-select-item" data-service="${escAttr(item.name)}" data-price="${item.price}" data-duration="${item.duration}">
-                        <input type="radio" name="service">
+                    <label class="service-select-item ${inCart ? 'selected' : ''}" data-id="${escAttr(item.id)}" data-service="${escAttr(item.name)}" data-price="${item.price}" data-duration="${item.duration}">
+                        <input type="checkbox" name="service" ${inCart ? 'checked' : ''}>
+                        <span class="service-select-check">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                        </span>
                         <span class="service-select-name">${escHTML(item.name)}</span>
                         <span class="service-select-price">${item.price}€</span>
                     </label>`;
@@ -140,18 +145,106 @@ document.addEventListener('DOMContentLoaded', () => {
             step1Container.insertBefore(div, bookingNav);
         });
 
+        // Insert cart summary before nav
+        const cartDiv = document.createElement('div');
+        cartDiv.className = 'cart-summary';
+        cartDiv.id = 'cartSummary';
+        step1Container.insertBefore(cartDiv, bookingNav);
+        updateCartUI();
+
         // Bind clicks
         step1Container.querySelectorAll('.service-select-item').forEach(item => {
-            item.addEventListener('click', () => {
-                step1Container.querySelectorAll('.service-select-item').forEach(i => i.classList.remove('selected'));
-                item.classList.add('selected');
-                item.querySelector('input[type="radio"]').checked = true;
-                selectedService = item.dataset.service;
-                selectedPrice = item.dataset.price;
-                selectedDuration = parseInt(item.dataset.duration) || 30;
-                toStep2Btn.disabled = false;
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const id = item.dataset.id;
+                const idx = cart.findIndex(c => c.id === id);
+
+                if (idx > -1) {
+                    // Remove from cart
+                    cart.splice(idx, 1);
+                    item.classList.remove('selected');
+                    item.querySelector('input').checked = false;
+                } else {
+                    // Add to cart
+                    cart.push({
+                        id: id,
+                        name: item.dataset.service,
+                        price: parseFloat(item.dataset.price),
+                        duration: parseInt(item.dataset.duration) || 30
+                    });
+                    item.classList.add('selected');
+                    item.querySelector('input').checked = true;
+                }
+
+                updateCartUI();
             });
         });
+    }
+
+    function updateCartUI() {
+        const cartDiv = document.getElementById('cartSummary');
+        if (!cartDiv) return;
+
+        if (cart.length === 0) {
+            cartDiv.style.display = 'none';
+            toStep2Btn.disabled = true;
+            return;
+        }
+
+        toStep2Btn.disabled = false;
+        cartDiv.style.display = 'block';
+
+        let html = `<div class="cart-header">
+            <span class="cart-title">Votre sélection</span>
+            <span class="cart-count">${cart.length} prestation${cart.length > 1 ? 's' : ''}</span>
+        </div>
+        <div class="cart-items">`;
+
+        cart.forEach(item => {
+            html += `
+                <div class="cart-item">
+                    <span class="cart-item-name">${escHTML(item.name)}</span>
+                    <span class="cart-item-details">${item.duration} min — ${item.price}€</span>
+                    <button class="cart-item-remove" data-id="${escAttr(item.id)}" title="Retirer">×</button>
+                </div>`;
+        });
+
+        html += `</div>
+        <div class="cart-footer">
+            <div class="cart-total-row">
+                <span>Durée totale</span>
+                <span class="cart-total-value">${formatDuration(cartDuration())}</span>
+            </div>
+            <div class="cart-total-row">
+                <span>Total</span>
+                <span class="cart-total-value cart-total-price">${cartTotal()}€</span>
+            </div>
+        </div>`;
+
+        cartDiv.innerHTML = html;
+
+        // Bind remove buttons
+        cartDiv.querySelectorAll('.cart-item-remove').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = btn.dataset.id;
+                cart = cart.filter(c => c.id !== id);
+                // Uncheck the item in the list
+                const label = step1Container.querySelector(`.service-select-item[data-id="${id}"]`);
+                if (label) {
+                    label.classList.remove('selected');
+                    label.querySelector('input').checked = false;
+                }
+                updateCartUI();
+            });
+        });
+    }
+
+    function formatDuration(min) {
+        if (min < 60) return min + ' min';
+        const h = Math.floor(min / 60);
+        const m = min % 60;
+        return m > 0 ? `${h}H${String(m).padStart(2, '0')}` : `${h}H`;
     }
 
     function escHTML(str) {
@@ -181,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     toStep2Btn.addEventListener('click', () => {
-        if (selectedService) { goToStep(2); renderCalendar(); }
+        if (cart.length > 0) { goToStep(2); renderCalendar(); }
     });
     backToStep1Btn.addEventListener('click', () => goToStep(1));
 
@@ -248,21 +341,20 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCalendar();
     });
 
-    // --- Time slots ---
+    // --- Time slots (uses total cart duration) ---
     function showTimeSlots() {
         timeSlotsContainer.style.display = 'block';
         selectedTime = null;
         toStep3Btn.disabled = true;
 
-        const duration = selectedDuration || 30;
+        const duration = cartDuration() || 30;
 
-        // Generate possible start times (9:00-19:00, every 30 min)
         const allSlots = [];
         for (let h = 9; h < 19; h++) {
             for (let m = 0; m < 60; m += 30) {
                 const totalMin = h * 60 + m;
-                if (totalMin >= 750 && totalMin < 840) continue; // skip 12:30-14:00 lunch
-                if (totalMin + duration > 19 * 60) continue; // must fit before closing
+                if (totalMin >= 750 && totalMin < 840) continue;
+                if (totalMin + duration > 19 * 60) continue;
                 allSlots.push({
                     time: `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`,
                     startMin: totalMin
@@ -272,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let html = '';
         if (allSlots.length === 0) {
-            html = '<p style="text-align:center;color:var(--color-text-muted);padding:24px 0;">Aucun créneau disponible. Essayez une autre date.</p>';
+            html = '<p style="text-align:center;color:var(--color-text-muted);padding:24px 0;">Aucun créneau disponible pour cette durée. Essayez une autre date.</p>';
         } else {
             allSlots.forEach(slot => {
                 html += `<button class="time-slot" data-time="${slot.time}">${slot.time}</button>`;
@@ -296,16 +388,16 @@ document.addEventListener('DOMContentLoaded', () => {
     backToStep2Btn.addEventListener('click', () => goToStep(2));
 
     // --- Summary ---
-    function formatDate(date) {
+    function formatDateStr(date) {
         const days = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
         return days[date.getDay()] + ' ' + date.getDate() + ' ' + MONTHS_FR[date.getMonth()] + ' ' + date.getFullYear();
     }
 
     function updateSummary() {
-        document.getElementById('summaryService').textContent = selectedService;
-        document.getElementById('summaryDate').textContent = formatDate(selectedDate);
+        document.getElementById('summaryService').textContent = cartNames();
+        document.getElementById('summaryDate').textContent = formatDateStr(selectedDate);
         document.getElementById('summaryTime').textContent = selectedTime;
-        document.getElementById('summaryPrice').textContent = selectedPrice + '€';
+        document.getElementById('summaryPrice').textContent = cartTotal() + '€';
     }
 
     // --- Submit reservation ---
@@ -328,10 +420,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const bookingData = {
-            service: selectedService,
-            price: selectedPrice,
-            duration: selectedDuration || 30,
-            date: formatDate(selectedDate),
+            service: cartNames(),
+            services: cart.map(c => ({ name: c.name, price: c.price, duration: c.duration })),
+            price: cartTotal(),
+            duration: cartDuration(),
+            date: formatDateStr(selectedDate),
             rawDate: selectedDate.toISOString().split('T')[0],
             time: selectedTime,
             firstName,
@@ -341,7 +434,6 @@ document.addEventListener('DOMContentLoaded', () => {
             notes: document.getElementById('notes').value.trim()
         };
 
-        // Disable button during submission
         toStep4Btn.disabled = true;
         toStep4Btn.textContent = 'Envoi en cours...';
 
@@ -353,10 +445,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (res.ok) {
-                document.getElementById('confService').textContent = selectedService;
-                document.getElementById('confDate').textContent = formatDate(selectedDate);
+                document.getElementById('confService').textContent = cartNames();
+                document.getElementById('confDate').textContent = formatDateStr(selectedDate);
                 document.getElementById('confTime').textContent = selectedTime;
-                document.getElementById('confPrice').textContent = selectedPrice + '€';
+                document.getElementById('confPrice').textContent = cartTotal() + '€';
                 goToStep(4);
             } else {
                 alert('Une erreur est survenue. Veuillez réessayer.');
