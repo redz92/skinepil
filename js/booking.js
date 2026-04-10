@@ -7,11 +7,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const API = {
         services: '/api/services',
-        reservations: '/api/reservations'
+        reservations: '/api/reservations',
+        blockedSlots: '/api/blocked-slots'
     };
 
     // --- State ---
     let allServices = [];
+    let blockedSlots = [];
     let cart = []; // { id, name, price, duration }
     let selectedDate = null;
     let selectedTime = null;
@@ -257,8 +259,21 @@ document.addEventListener('DOMContentLoaded', () => {
         return (str || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
+    // --- Load blocked slots ---
+    async function loadBlockedSlots() {
+        try {
+            const res = await fetch(API.blockedSlots);
+            if (res.ok) {
+                blockedSlots = await res.json();
+            }
+        } catch {
+            blockedSlots = [];
+        }
+    }
+
     // Init
     loadServices();
+    loadBlockedSlots();
 
     // --- Step navigation ---
     function goToStep(stepNum) {
@@ -300,6 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         for (let d = 1; d <= daysInMonth; d++) {
             const date = new Date(currentYear, currentMonth, d);
+            const dateStr = date.toISOString().split('T')[0];
             const isPast = date < today;
             const isSunday = date.getDay() === 0;
             const isToday = date.getTime() === today.getTime();
@@ -308,12 +324,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 date.getMonth() === selectedDate.getMonth() &&
                 date.getFullYear() === selectedDate.getFullYear();
 
+            // Check if full day is blocked
+            const isFullDayBlocked = blockedSlots.some(s => s.date === dateStr && s.type === 'full-day');
+
             let classes = 'calendar-day';
-            if (isPast || isSunday) classes += ' disabled';
+            if (isPast || isSunday || isFullDayBlocked) classes += ' disabled';
             if (isToday) classes += ' today';
             if (isSelected) classes += ' selected';
+            if (isFullDayBlocked) classes += ' blocked';
 
-            html += `<button class="${classes}" data-day="${d}" ${(isPast || isSunday) ? 'disabled' : ''}>${d}</button>`;
+            html += `<button class="${classes}" data-day="${d}" ${(isPast || isSunday || isFullDayBlocked) ? 'disabled' : ''}>${d}${isFullDayBlocked ? '<span style="display:block;font-size:8px;opacity:0.6">indispo.</span>' : ''}</button>`;
         }
         calDays.innerHTML = html;
 
@@ -349,16 +369,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const duration = cartDuration() || 30;
 
+        // Get blocked time slots for the selected date
+        const dateStr = selectedDate.toISOString().split('T')[0];
+        const blockedTimes = blockedSlots
+            .filter(s => s.date === dateStr && s.type === 'slot')
+            .map(s => s.time);
+
         const allSlots = [];
         for (let h = 9; h < 19; h++) {
             for (let m = 0; m < 60; m += 30) {
                 const totalMin = h * 60 + m;
                 if (totalMin >= 750 && totalMin < 840) continue;
                 if (totalMin + duration > 19 * 60) continue;
-                allSlots.push({
-                    time: `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`,
-                    startMin: totalMin
-                });
+                const time = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                // Skip blocked time slots
+                if (blockedTimes.includes(time)) continue;
+                allSlots.push({ time, startMin: totalMin });
             }
         }
 

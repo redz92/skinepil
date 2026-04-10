@@ -8,7 +8,8 @@
     const API = {
         auth: '/api/auth',
         services: '/api/services',
-        reservations: '/api/reservations'
+        reservations: '/api/reservations',
+        blockedSlots: '/api/blocked-slots'
     };
 
     let authToken = null;
@@ -41,7 +42,7 @@
     async function showDashboard() {
         loginPage.style.display = 'none';
         dashboard.style.display = 'grid';
-        await Promise.all([loadReservations(), loadServices()]);
+        await Promise.all([loadReservations(), loadServices(), loadBlockedSlots()]);
     }
 
     loginBtn.addEventListener('click', doLogin);
@@ -94,7 +95,7 @@
     // ============================
     const sidebarLinks = document.querySelectorAll('.sidebar-link[data-view]');
     const viewTitle = document.getElementById('viewTitle');
-    const VIEW_TITLES = { reservations: 'Réservations', services: 'Prestations' };
+    const VIEW_TITLES = { reservations: 'Réservations', agenda: 'Agenda', services: 'Prestations' };
 
     sidebarLinks.forEach(link => {
         link.addEventListener('click', () => {
@@ -422,6 +423,299 @@
             e.preventDefault();
             e.returnValue = '';
         }
+    });
+
+    // ============================
+    // Agenda — Blocked Slots
+    // ============================
+    let allBlockedSlots = [];
+    let agendaMonth = new Date().getMonth();
+    let agendaYear = new Date().getFullYear();
+    let agendaSelectedDate = null;
+
+    const MONTHS_FR = [
+        'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+        'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+    ];
+
+    async function loadBlockedSlots() {
+        try {
+            const res = await fetch(API.blockedSlots, { headers: headers() });
+            if (res.ok) {
+                allBlockedSlots = await res.json();
+            } else {
+                allBlockedSlots = [];
+            }
+        } catch {
+            allBlockedSlots = [];
+        }
+        renderAgendaCalendar();
+        renderAllBlockedList();
+    }
+
+    function renderAgendaCalendar() {
+        const calGrid = document.getElementById('agendaCalGrid');
+        const calMonthEl = document.getElementById('agendaMonth');
+        if (!calGrid || !calMonthEl) return;
+
+        calMonthEl.textContent = MONTHS_FR[agendaMonth] + ' ' + agendaYear;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const firstDay = new Date(agendaYear, agendaMonth, 1).getDay();
+        const startDay = firstDay === 0 ? 6 : firstDay - 1;
+        const daysInMonth = new Date(agendaYear, agendaMonth + 1, 0).getDate();
+
+        let html = '';
+        for (let i = 0; i < startDay; i++) {
+            html += '<div class="agenda-day empty"></div>';
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const date = new Date(agendaYear, agendaMonth, d);
+            const dateStr = date.toISOString().split('T')[0];
+            const isPast = date < today;
+            const isToday = date.getTime() === today.getTime();
+            const isSelected = agendaSelectedDate === dateStr;
+
+            // Count blocks for this day
+            const dayBlocks = allBlockedSlots.filter(s => s.date === dateStr);
+            const hasFullDay = dayBlocks.some(s => s.type === 'full-day');
+
+            let classes = 'agenda-day';
+            if (isPast) classes += ' past';
+            if (isToday) classes += ' today';
+            if (isSelected) classes += ' selected';
+            if (hasFullDay) classes += ' blocked-full';
+            else if (dayBlocks.length > 0) classes += ' blocked-partial';
+
+            html += `<button class="${classes}" data-date="${dateStr}" ${isPast ? 'disabled' : ''}>
+                <span class="agenda-day-num">${d}</span>
+                ${dayBlocks.length > 0 ? `<span class="agenda-day-dot">${hasFullDay ? '🔒' : dayBlocks.length}</span>` : ''}
+            </button>`;
+        }
+
+        calGrid.innerHTML = html;
+
+        // Bind clicks
+        calGrid.querySelectorAll('.agenda-day:not(.empty):not([disabled])').forEach(btn => {
+            btn.addEventListener('click', () => {
+                calGrid.querySelectorAll('.agenda-day').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                agendaSelectedDate = btn.dataset.date;
+                showAgendaDayPanel(agendaSelectedDate);
+            });
+        });
+    }
+
+    function showAgendaDayPanel(dateStr) {
+        const panel = document.getElementById('agendaDayPanel');
+        panel.style.display = 'block';
+
+        // Format date nicely
+        const d = new Date(dateStr + 'T12:00:00');
+        const days = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+        document.getElementById('agendaDayTitle').textContent =
+            days[d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS_FR[d.getMonth()] + ' ' + d.getFullYear();
+
+        // Populate time select
+        const timeSelect = document.getElementById('agendaBlockTime');
+        timeSelect.innerHTML = '<option value="">Choisir un créneau</option>';
+        for (let h = 9; h < 19; h++) {
+            for (let m = 0; m < 60; m += 30) {
+                const totalMin = h * 60 + m;
+                if (totalMin >= 750 && totalMin < 840) continue; // Skip lunch 12:30-14:00
+                const time = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                timeSelect.innerHTML += `<option value="${time}">${time}</option>`;
+            }
+        }
+
+        // Type change handler
+        const typeSelect = document.getElementById('agendaBlockType');
+        typeSelect.onchange = () => {
+            timeSelect.disabled = typeSelect.value === 'full-day';
+            if (typeSelect.value === 'full-day') timeSelect.value = '';
+        };
+        typeSelect.value = 'full-day';
+        timeSelect.disabled = true;
+
+        // Show existing blocks for this day
+        renderDayBlocks(dateStr);
+    }
+
+    function renderDayBlocks(dateStr) {
+        const list = document.getElementById('agendaBlocksList');
+        const dayBlocks = allBlockedSlots.filter(s => s.date === dateStr);
+
+        if (dayBlocks.length === 0) {
+            list.innerHTML = '<p class="agenda-no-blocks">Aucun blocage pour cette date</p>';
+            return;
+        }
+
+        let html = '<div class="agenda-blocks-title">Blocages actifs</div>';
+        dayBlocks.forEach(slot => {
+            html += `
+                <div class="agenda-block-item">
+                    <div class="agenda-block-info">
+                        <span class="agenda-block-type">${slot.type === 'full-day' ? '🔒 Journée entière' : '⏰ ' + slot.time}</span>
+                        ${slot.reason ? `<span class="agenda-block-reason">${esc(slot.reason)}</span>` : ''}
+                    </div>
+                    <button class="action-btn danger agenda-unblock-btn" data-id="${esc(slot.id)}" title="Débloquer">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </button>
+                </div>`;
+        });
+        list.innerHTML = html;
+
+        // Bind unblock buttons
+        list.querySelectorAll('.agenda-unblock-btn').forEach(btn => {
+            btn.addEventListener('click', () => removeBlockedSlot(btn.dataset.id));
+        });
+    }
+
+    function renderAllBlockedList() {
+        const container = document.getElementById('agendaAllBlocked');
+        const emptyEl = document.getElementById('emptyBlocked');
+        const countEl = document.getElementById('agendaBlockedCount');
+        if (!container) return;
+
+        // Filter to only show future blocks
+        const today = new Date().toISOString().split('T')[0];
+        const futureBlocks = allBlockedSlots
+            .filter(s => s.date >= today)
+            .sort((a, b) => a.date.localeCompare(b.date) || (a.time || '').localeCompare(b.time || ''));
+
+        countEl.textContent = futureBlocks.length;
+
+        if (futureBlocks.length === 0) {
+            container.innerHTML = '';
+            emptyEl.style.display = 'block';
+            return;
+        }
+
+        emptyEl.style.display = 'none';
+
+        let html = '';
+        let currentDate = '';
+
+        futureBlocks.forEach(slot => {
+            if (slot.date !== currentDate) {
+                currentDate = slot.date;
+                const d = new Date(slot.date + 'T12:00:00');
+                const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+                const label = days[d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS_FR[d.getMonth()];
+                html += `<div class="agenda-list-date">${label}</div>`;
+            }
+
+            html += `
+                <div class="agenda-list-item">
+                    <div class="agenda-list-item-info">
+                        <span class="badge ${slot.type === 'full-day' ? 'badge-cancelled' : 'badge-pending'}">
+                            ${slot.type === 'full-day' ? 'Journée' : slot.time}
+                        </span>
+                        ${slot.reason ? `<span class="agenda-list-item-reason">${esc(slot.reason)}</span>` : ''}
+                    </div>
+                    <button class="action-btn danger" data-unblock-id="${esc(slot.id)}" title="Débloquer">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </button>
+                </div>`;
+        });
+
+        container.innerHTML = html;
+
+        container.querySelectorAll('[data-unblock-id]').forEach(btn => {
+            btn.addEventListener('click', () => removeBlockedSlot(btn.dataset.unblockId));
+        });
+    }
+
+    // Block a slot
+    document.getElementById('agendaBlockBtn')?.addEventListener('click', async () => {
+        if (!agendaSelectedDate) return;
+
+        const type = document.getElementById('agendaBlockType').value;
+        const time = document.getElementById('agendaBlockTime').value;
+        const reason = document.getElementById('agendaBlockReason').value.trim();
+
+        if (type === 'slot' && !time) {
+            alert('Veuillez sélectionner un créneau horaire.');
+            return;
+        }
+
+        const btn = document.getElementById('agendaBlockBtn');
+        btn.disabled = true;
+        btn.textContent = 'Blocage...';
+
+        try {
+            const res = await fetch(API.blockedSlots, {
+                method: 'POST',
+                headers: headers(),
+                body: JSON.stringify({
+                    date: agendaSelectedDate,
+                    time: type === 'slot' ? time : null,
+                    type,
+                    reason
+                })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                allBlockedSlots.push(data.slot);
+                renderAgendaCalendar();
+                renderAllBlockedList();
+                showAgendaDayPanel(agendaSelectedDate);
+
+                // Clear form
+                document.getElementById('agendaBlockReason').value = '';
+                document.getElementById('agendaBlockType').value = 'full-day';
+                document.getElementById('agendaBlockTime').value = '';
+                document.getElementById('agendaBlockTime').disabled = true;
+            } else {
+                alert('Erreur lors du blocage');
+            }
+        } catch {
+            alert('Erreur de connexion');
+        }
+
+        btn.disabled = false;
+        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;vertical-align:middle;"><path d="M12 5v14M5 12h14"/></svg> Bloquer';
+    });
+
+    // Remove a blocked slot
+    async function removeBlockedSlot(id) {
+        if (!confirm('Débloquer ce créneau ?')) return;
+
+        try {
+            const res = await fetch(API.blockedSlots, {
+                method: 'DELETE',
+                headers: headers(),
+                body: JSON.stringify({ id })
+            });
+
+            if (res.ok) {
+                allBlockedSlots = allBlockedSlots.filter(s => s.id !== id);
+                renderAgendaCalendar();
+                renderAllBlockedList();
+                if (agendaSelectedDate) renderDayBlocks(agendaSelectedDate);
+            } else {
+                alert('Erreur lors du déblocage');
+            }
+        } catch {
+            alert('Erreur de connexion');
+        }
+    }
+
+    // Calendar nav
+    document.getElementById('agendaPrev')?.addEventListener('click', () => {
+        agendaMonth--;
+        if (agendaMonth < 0) { agendaMonth = 11; agendaYear--; }
+        renderAgendaCalendar();
+    });
+
+    document.getElementById('agendaNext')?.addEventListener('click', () => {
+        agendaMonth++;
+        if (agendaMonth > 11) { agendaMonth = 0; agendaYear++; }
+        renderAgendaCalendar();
     });
 
     // ============================
