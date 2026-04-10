@@ -1,4 +1,4 @@
-const { kv } = require('@vercel/kv');
+const { kv } = require('./_kv');
 const { verifyAuth, DEFAULT_SERVICES } = require('./_utils');
 
 const KV_KEY = 'skinepil:services';
