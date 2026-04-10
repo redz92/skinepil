@@ -5,6 +5,11 @@ const KV_KEY = 'skinepil:blocked-slots';
 
 module.exports = async function handler(req, res) {
 
+    // Handle CORS preflight
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
     // GET — public: returns blocked slots (needed by booking page)
     if (req.method === 'GET') {
         try {

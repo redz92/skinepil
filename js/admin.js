@@ -671,10 +671,13 @@
                 document.getElementById('agendaBlockTime').value = '';
                 document.getElementById('agendaBlockTime').disabled = true;
             } else {
-                alert('Erreur lors du blocage');
+                const errData = await res.text();
+                console.error('Block error:', res.status, errData);
+                alert('Erreur lors du blocage (' + res.status + '): ' + errData);
             }
-        } catch {
-            alert('Erreur de connexion');
+        } catch (err) {
+            console.error('Block catch:', err);
+            alert('Erreur de connexion: ' + err.message);
         }
 
         btn.disabled = false;
