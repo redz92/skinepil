@@ -28,30 +28,40 @@ module.exports = async function handler(req, res) {
         }
 
         try {
-            const { date, time, type, reason } = req.body;
-            // type: "full-day" (whole day blocked) or "slot" (specific time)
+            const body = req.body || {};
+            const date = body.date;
+            const time = body.time;
+            const type = body.type;
+            const reason = body.reason;
 
             if (!date) {
-                return res.status(400).json({ error: 'Missing date' });
+                return res.status(400).json({ error: 'Missing date', body: body });
             }
 
             const slot = {
                 id: 'blk_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
-                date,       // "2026-04-15"
-                time: time || null,  // "14:00" or null for full day
+                date,
+                time: time || null,
                 type: type || (time ? 'slot' : 'full-day'),
                 reason: reason || '',
                 createdAt: new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })
             };
 
-            const slots = await kv.get(KV_KEY) || [];
+            let slots = [];
+            try {
+                slots = await kv.get(KV_KEY) || [];
+            } catch (kvErr) {
+                // KV get failed, start fresh
+                slots = [];
+            }
+
             slots.push(slot);
             await kv.set(KV_KEY, slots);
 
             return res.status(201).json({ success: true, slot });
         } catch (err) {
             console.error('POST blocked-slots error:', err);
-            return res.status(500).json({ error: 'Failed to block slot' });
+            return res.status(500).json({ error: 'Failed to block slot', detail: err.message || String(err) });
         }
     }
 
@@ -62,7 +72,8 @@ module.exports = async function handler(req, res) {
         }
 
         try {
-            const { id } = req.body;
+            const body = req.body || {};
+            const id = body.id;
             if (!id) {
                 return res.status(400).json({ error: 'Missing id' });
             }
@@ -74,7 +85,7 @@ module.exports = async function handler(req, res) {
             return res.status(200).json({ success: true });
         } catch (err) {
             console.error('DELETE blocked-slots error:', err);
-            return res.status(500).json({ error: 'Failed to unblock slot' });
+            return res.status(500).json({ error: 'Failed to unblock slot', detail: err.message || String(err) });
         }
     }
 
