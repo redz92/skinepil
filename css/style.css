@@ -795,9 +795,9 @@ ul { list-style: none; }
     padding: 160px 0 80px;
     text-align: center;
     background: var(--color-dark-soft);
-    background-image: url('https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=1600&h=600&fit=crop');
+    background-image: url('../images/header-prestations.jpg');
     background-size: cover;
-    background-position: center;
+    background-position: center top;
     position: relative;
     overflow: hidden;
 }
