@@ -48,15 +48,12 @@ module.exports = async function handler(req, res) {
             };
 
             let slots = [];
-            try {
-                slots = await kv.get(KV_KEY) || [];
-            } catch (kvErr) {
-                // KV get failed, start fresh
-                slots = [];
-            }
-
+            try { slots = await kv.get(KV_KEY) || []; } catch { slots = []; }
             slots.push(slot);
-            await kv.set(KV_KEY, slots);
+            try { await kv.set(KV_KEY, slots); } catch (kvErr) {
+                console.error('KV set failed:', kvErr.message);
+                return res.status(503).json({ error: 'Storage non configuré. Ajoutez UPSTASH_REDIS_REST_URL et UPSTASH_REDIS_REST_TOKEN dans Vercel.' });
+            }
 
             return res.status(201).json({ success: true, slot });
         } catch (err) {

@@ -104,10 +104,15 @@ module.exports = async function handler(req, res) {
             booking.status = 'pending';
             booking.createdAt = new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' });
 
-            // Save
-            const reservations = await kv.get(KV_KEY) || [];
-            reservations.push(booking);
-            await kv.set(KV_KEY, reservations);
+            // Try to save to KV (non-blocking — reservation succeeds even if storage fails)
+            try {
+                const reservations = await kv.get(KV_KEY) || [];
+                reservations.push(booking);
+                await kv.set(KV_KEY, reservations);
+            } catch (kvErr) {
+                console.error('KV save failed (non-critical):', kvErr.message);
+                // Continue anyway — email notification is the primary record
+            }
 
             // Send email notification (async, don't block response)
             sendEmailNotification(booking).catch(() => {});
