@@ -4,21 +4,11 @@ module.exports = async function handler(req, res) {
 
     // Temporary KV diagnostic (GET only)
     if (req.method === 'GET') {
-        const url   = process.env.UPSTASH_REDIS_REST_URL;
-        const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-        if (!url)   return res.status(200).json({ kv: 'MISSING URL' });
-        if (!token) return res.status(200).json({ kv: 'MISSING TOKEN' });
-        try {
-            const r = await fetch(`${url}/pipeline`, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify([['PING']])
-            });
-            const data = await r.json();
-            return res.status(200).json({ kv: 'OK', ping: data, url: url.substring(0, 35) + '...' });
-        } catch (err) {
-            return res.status(200).json({ kv: 'ERROR', detail: err.message });
-        }
+        // Show all custom env var names (no values)
+        const allKeys = Object.keys(process.env)
+            .filter(k => !k.startsWith('VERCEL_') && !k.startsWith('AWS_') && !['PATH','HOME','LANG','PWD','SHLVL','TZ','NODE_PATH','NODE_ENV','LD_LIBRARY_PATH','NX_DAEMON','TURBO_CACHE','TURBO_DOWNLOAD_LOCAL_ENABLED','TURBO_PLATFORM_ENV','TURBO_REMOTE_ONLY','TURBO_RUN_SUMMARY','NOW_REGION'].includes(k))
+            .sort();
+        return res.status(200).json({ custom_env_keys: allKeys });
     }
 
     if (req.method !== 'POST') {
