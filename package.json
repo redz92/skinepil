@@ -3,7 +3,6 @@
   "name": "skinepil",
   "version": "1.0.0",
   "dependencies": {
-    "redis": "^4.6.0",
     "resend": "^4.0.0"
   }
 }
